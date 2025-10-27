@@ -204,14 +204,14 @@ class ComparisonRunner:
         # Small delay between backends
         time.sleep(30)
 
-        # Test vLLM backend
-        logger.info("testing_vllm_backend")
-        vllm_results = self.test_backend("vllm", "service_vllm.py", 8001)
+        # Test ONNX+TensorRT backend
+        logger.info("testing_onnx_tensorrt_backend")
+        onnx_trt_results = self.test_backend("onnx_trt", "service_onnx_trt.py", 8002)
 
         # Aggregate all results
         all_results = {
             "huggingface": hf_results,
-            "vllm": vllm_results,
+            "onnx_trt": onnx_trt_results,
         }
 
         # Save results index

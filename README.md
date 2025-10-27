@@ -1,10 +1,16 @@
 # Embedding Service Performance Comparison PoC
 
-Comparing **HuggingFace/LangChain** vs **vLLM** backends for embedding generation using ModernBERT on SLURM cluster with L40s GPU.
+Comparing **HuggingFace/LangChain** vs **ONNX Runtime + TensorRT** backends for embedding generation using ModernBERT on SLURM cluster with L40s GPU.
 
 ## Overview
 
-This project demonstrates how vLLM can significantly improve throughput and GPU utilization compared to the traditional HuggingFace backend for embedding workloads.
+This project demonstrates how ONNX Runtime with TensorRT can significantly improve throughput and GPU utilization compared to the traditional HuggingFace backend for embedding workloads.
+
+**Key Optimizations in ONNX+TensorRT:**
+- FP16 precision (faster inference, half the memory)
+- Kernel fusion (combines operations)
+- TensorRT engine caching
+- CUDA execution optimization
 
 **Key Metrics Tracked:**
 - Throughput (requests/second)
@@ -17,7 +23,7 @@ This project demonstrates how vLLM can significantly improve throughput and GPU 
 
 ```
 .
-├── environment.yml           # Conda environment with CUDA 12.1, vLLM 0.11.0
+├── environment.yml           # Conda environment with CUDA 12.1, ONNX+TensorRT
 ├── setup_cluster.sh         # Environment setup script for SLURM
 ├── submit_job.sh            # SLURM batch job script
 │
@@ -26,7 +32,7 @@ This project demonstrates how vLLM can significantly improve throughput and GPU 
 ├── gpu_monitor.py           # Background GPU metrics collector
 │
 ├── service_huggingface.py   # HuggingFace/LangChain backend (port 8000)
-├── service_vllm.py          # vLLM backend (port 8001)
+├── service_onnx_trt.py      # ONNX+TensorRT backend (port 8002)
 ├── stress_test.py           # Stress testing script with metrics
 │
 ├── run_comparison.py        # Main orchestrator script
@@ -51,9 +57,10 @@ sbatch submit_job.sh
 
 This will:
 - Check/create conda environment
+- Install ONNX Runtime + TensorRT
 - Load 100K MS MARCO passages
 - Test HuggingFace backend with batch sizes [16, 32, 64]
-- Test vLLM backend with batch sizes [16, 32, 64]
+- Test ONNX+TensorRT backend with batch sizes [16, 32, 64]
 - Generate comparison plots and summary report
 
 ### 3. Monitor Job
@@ -78,11 +85,11 @@ results/
 ├── stress_huggingface_batch16_*.json    # Stress test results
 ├── stress_huggingface_batch32_*.json
 ├── stress_huggingface_batch64_*.json
-├── stress_vllm_batch16_*.json
-├── stress_vllm_batch32_*.json
-├── stress_vllm_batch64_*.json
+├── stress_onnx_trt_batch16_*.json
+├── stress_onnx_trt_batch32_*.json
+├── stress_onnx_trt_batch64_*.json
 ├── gpu_huggingface_batch16_*.json       # GPU metrics
-├── gpu_vllm_batch16_*.json
+├── gpu_onnx_trt_batch16_*.json
 ├── ...
 ├── summary_report.txt                    # Text summary
 ├── results_index.json                    # Index of all results
@@ -163,7 +170,7 @@ Response:
 ```json
 {
   "status": "healthy",
-  "backend": "vllm",
+  "backend": "onnx_tensorrt",
   "model": "answerdotai/ModernBERT-base",
   "gpu_available": true
 }
@@ -201,6 +208,7 @@ SLURM Job (4 hours, 1x L40s GPU, 32GB RAM, 8 CPUs)
 ├── Setup Phase
 │   ├── Load modules (anaconda3, cuda/12.1)
 │   ├── Check/create conda environment
+│   ├── Install ONNX Runtime + TensorRT
 │   ├── Preload 100K MS MARCO sentences
 │   └── Verify GPU availability
 │
@@ -213,9 +221,9 @@ SLURM Job (4 hours, 1x L40s GPU, 32GB RAM, 8 CPUs)
 │       ├── Save results
 │       └── Stop service
 │
-├── Test Phase 2: vLLM Backend
+├── Test Phase 2: ONNX+TensorRT Backend
 │   └── For each batch_size in [16, 32, 64]:
-│       ├── Start service_vllm.py (background)
+│       ├── Start service_onnx_trt.py (background)
 │       ├── Start GPU monitor (background)
 │       ├── Run stress test (10 minutes)
 │       ├── Stop GPU monitor
@@ -238,18 +246,35 @@ SLURM Job (4 hours, 1x L40s GPU, 32GB RAM, 8 CPUs)
 
 ## Expected Results
 
-Based on vLLM optimizations:
+Based on ONNX+TensorRT optimizations:
 
-- **2-5x higher throughput** with vLLM
-- **Lower P99 latency** due to continuous batching
-- **Better GPU utilization** (70-90% vs 30-50%)
+- **1.5-3x higher throughput** with ONNX+TensorRT
+- **Lower P99 latency** due to kernel fusion and FP16
+- **Better GPU utilization** (60-80% vs 30-50%)
 - **More consistent latencies** (smaller variance)
+- **Lower memory usage** (FP16 uses half the memory)
+
+## Backends Comparison
+
+### HuggingFace/LangChain (Baseline)
+- Full FP32 precision
+- Standard PyTorch inference
+- No special optimizations
+- Port: 8000
+
+### ONNX Runtime + TensorRT
+- FP16 precision (2x faster)
+- TensorRT kernel fusion
+- CUDA graph optimization
+- Engine caching
+- Port: 8002
 
 ## System Requirements
 
 - SLURM cluster with GPU nodes
 - L40s GPU (48GB VRAM) or similar
 - CUDA 12.1
+- TensorRT 8.6+
 - 32GB RAM
 - 8 CPU cores
 
@@ -268,12 +293,16 @@ nvidia-smi
 Recreate environment:
 ```bash
 conda env remove -n embedding_poc
-conda env create -f environment.yml
+source setup_cluster.sh
 ```
+
+### TensorRT Initialization Fails
+
+If TensorRT fails, the ONNX service will automatically fallback to CUDA execution provider. Check logs for warnings.
 
 ### Port Already in Use
 
-Services automatically use ports 8000 and 8001. If occupied, modify service files.
+Services use ports 8000 and 8002. If occupied, modify service files.
 
 ### Out of Memory
 
@@ -290,6 +319,10 @@ Dataset: MS MARCO (Microsoft Machine Reading Comprehension)
 
 Model: ModernBERT by Answer.AI
 - https://huggingface.co/answerdotai/ModernBERT-base
+
+Optimization: ONNX Runtime + TensorRT
+- https://onnxruntime.ai/
+- https://developer.nvidia.com/tensorrt
 
 ## License
 

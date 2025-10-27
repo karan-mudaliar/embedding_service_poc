@@ -29,27 +29,37 @@ def load_results(results_dir: str) -> Dict:
 
     data = {
         "huggingface": {"stress": [], "gpu": []},
-        "vllm": {"stress": [], "gpu": []},
+        "onnx_trt": {"stress": [], "gpu": []},
     }
 
     for file in stress_files:
         with open(file) as f:
             result = json.load(f)
-            backend = "huggingface" if "huggingface" in file.name else "vllm"
+            if "huggingface" in file.name:
+                backend = "huggingface"
+            elif "onnx_trt" in file.name:
+                backend = "onnx_trt"
+            else:
+                continue
             data[backend]["stress"].append(result)
 
     for file in gpu_files:
         with open(file) as f:
             result = json.load(f)
-            backend = "huggingface" if "huggingface" in file.name else "vllm"
+            if "huggingface" in file.name:
+                backend = "huggingface"
+            elif "onnx_trt" in file.name:
+                backend = "onnx_trt"
+            else:
+                continue
             data[backend]["gpu"].append(result)
 
     logger.info(
         "loaded_results",
         hf_stress=len(data["huggingface"]["stress"]),
         hf_gpu=len(data["huggingface"]["gpu"]),
-        vllm_stress=len(data["vllm"]["stress"]),
-        vllm_gpu=len(data["vllm"]["gpu"]),
+        onnx_trt_stress=len(data["onnx_trt"]["stress"]),
+        onnx_trt_gpu=len(data["onnx_trt"]["gpu"]),
     )
 
     return data
@@ -59,9 +69,9 @@ def plot_throughput_comparison(data: Dict, output_file: str):
     """Plot throughput (RPS) comparison by batch size."""
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    backends = ["huggingface", "vllm"]
-    colors = {"huggingface": "#FF6B6B", "vllm": "#4ECDC4"}
-    labels = {"huggingface": "HuggingFace/LangChain", "vllm": "vLLM"}
+    backends = ["huggingface", "onnx_trt"]
+    colors = {"huggingface": "#FF6B6B", "onnx_trt": "#4ECDC4"}
+    labels = {"huggingface": "HuggingFace/LangChain", "onnx_trt": "ONNX+TensorRT"}
 
     for backend in backends:
         stress_results = sorted(data[backend]["stress"], key=lambda x: x["batch_size"])
@@ -73,7 +83,7 @@ def plot_throughput_comparison(data: Dict, output_file: str):
 
     ax.set_xlabel("Batch Size", fontsize=12)
     ax.set_ylabel("Requests per Second", fontsize=12)
-    ax.set_title("Throughput Comparison: HuggingFace vs vLLM", fontsize=14, fontweight='bold')
+    ax.set_title("Throughput Comparison: HuggingFace vs ONNX+TensorRT", fontsize=14, fontweight='bold')
     ax.legend(fontsize=11)
     ax.grid(True, alpha=0.3)
 
@@ -91,9 +101,9 @@ def plot_latency_comparison(data: Dict, output_file: str):
     percentiles = ["p50", "p90", "p99"]
     titles = ["P50 Latency", "P90 Latency", "P99 Latency"]
 
-    backends = ["huggingface", "vllm"]
-    colors = {"huggingface": "#FF6B6B", "vllm": "#4ECDC4"}
-    labels = {"huggingface": "HuggingFace/LangChain", "vllm": "vLLM"}
+    backends = ["huggingface", "onnx_trt"]
+    colors = {"huggingface": "#FF6B6B", "onnx_trt": "#4ECDC4"}
+    labels = {"huggingface": "HuggingFace/LangChain", "onnx_trt": "ONNX+TensorRT"}
 
     for idx, (percentile, title) in enumerate(zip(percentiles, titles)):
         ax = axes[idx]
@@ -123,9 +133,9 @@ def plot_gpu_utilization(data: Dict, output_file: str):
     """Plot GPU utilization comparison."""
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    backends = ["huggingface", "vllm"]
-    colors = {"huggingface": "#FF6B6B", "vllm": "#4ECDC4"}
-    labels = {"huggingface": "HuggingFace/LangChain", "vllm": "vLLM"}
+    backends = ["huggingface", "onnx_trt"]
+    colors = {"huggingface": "#FF6B6B", "onnx_trt": "#4ECDC4"}
+    labels = {"huggingface": "HuggingFace/LangChain", "onnx_trt": "ONNX+TensorRT"}
 
     for backend in backends:
         gpu_results = data[backend]["gpu"]
@@ -170,11 +180,11 @@ def generate_summary_report(data: Dict, output_file: str):
     with open(output_file, "w") as f:
         f.write("=" * 70 + "\n")
         f.write("EMBEDDING SERVICE PERFORMANCE COMPARISON\n")
-        f.write("HuggingFace/LangChain vs vLLM\n")
+        f.write("HuggingFace/LangChain vs ONNX+TensorRT\n")
         f.write("=" * 70 + "\n\n")
 
-        for backend in ["huggingface", "vllm"]:
-            backend_name = "HuggingFace/LangChain" if backend == "huggingface" else "vLLM"
+        for backend in ["huggingface", "onnx_trt"]:
+            backend_name = "HuggingFace/LangChain" if backend == "huggingface" else "ONNX+TensorRT"
             f.write(f"\n{backend_name} Backend:\n")
             f.write("-" * 70 + "\n")
 

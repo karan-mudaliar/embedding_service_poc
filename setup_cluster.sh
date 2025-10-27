@@ -38,13 +38,17 @@ fi
 echo ""
 echo "Installing pip packages..."
 pip install --upgrade pip
-pip install vllm==0.11.0
 pip install fastapi uvicorn[standard] pydantic tyro
 pip install langchain langchain-community sentence-transformers
 pip install httpx numpy datasets
 pip install psutil pynvml
 pip install structlog colorama
 pip install matplotlib seaborn
+
+# ONNX Runtime and TensorRT backends
+echo "Installing ONNX Runtime and TensorRT..."
+pip install onnxruntime-gpu optimum[onnxruntime-gpu]
+pip install tensorrt
 
 echo ""
 echo "=========================================="

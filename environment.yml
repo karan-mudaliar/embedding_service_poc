@@ -16,13 +16,15 @@ dependencies:
     - pydantic>=2.5.0
     - tyro>=0.6.0
 
-    # vLLM backend for GPU (install first to get correct deps)
-    - vllm==0.11.0
-
-    # HuggingFace/LangChain backend (let vllm dictate transformers version)
+    # HuggingFace/LangChain backend
     - langchain>=0.1.0
     - langchain-community>=0.0.10
     - sentence-transformers>=2.2.0
+    - transformers>=4.36.0
+
+    # ONNX Runtime + TensorRT backend
+    - onnxruntime-gpu>=1.16.0
+    - optimum[onnxruntime-gpu]>=1.14.0
 
     # Testing and metrics
     - httpx>=0.25.0
