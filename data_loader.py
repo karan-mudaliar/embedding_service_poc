@@ -11,7 +11,7 @@ import structlog
 logger = structlog.get_logger()
 
 
-def load_test_sentences(num_samples: int = 10000, cache_dir: str = "./data_cache") -> List[str]:
+def load_test_sentences(num_samples: int = 100000, cache_dir: str = "./data_cache") -> List[str]:
     """
     Load passages from MS MARCO dataset for embedding testing.
 
@@ -42,7 +42,7 @@ def load_test_sentences(num_samples: int = 10000, cache_dir: str = "./data_cache
         text = item["text"]
         sentences.append(text)
 
-        if (i + 1) % 1000 == 0:
+        if (i + 1) % 10000 == 0:
             logger.info("loading_progress", passages_loaded=i + 1)
 
     logger.info("loaded_ms_marco_dataset", num_passages=len(sentences))
@@ -67,7 +67,7 @@ def load_test_data(input_file: str = "test_sentences.json") -> List[str]:
 if __name__ == "__main__":
     # Test the data loader
     logger.info("testing_ms_marco_data_loader")
-    sentences = load_test_sentences(num_samples=1000)
+    sentences = load_test_sentences(num_samples=100000)
 
     avg_length = sum(len(s) for s in sentences) / len(sentences)
     logger.info(
