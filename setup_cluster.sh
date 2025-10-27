@@ -25,6 +25,20 @@ if conda env list | grep -q "^${ENV_NAME} "; then
     echo ""
     echo "Environment '${ENV_NAME}' already exists. Activating..."
     conda activate ${ENV_NAME}
+
+    # Check if key packages are installed, install if missing
+    echo "Verifying required packages..."
+    python -c "import structlog" 2>/dev/null || {
+        echo "Missing packages detected. Installing..."
+        pip install --upgrade pip
+        pip install vllm==0.11.0
+        pip install fastapi uvicorn[standard] pydantic tyro
+        pip install langchain langchain-community sentence-transformers
+        pip install httpx numpy datasets
+        pip install psutil pynvml
+        pip install structlog colorama
+        pip install matplotlib seaborn
+    }
 else
     echo ""
     echo "Environment '${ENV_NAME}' not found. Creating from environment.yml..."
@@ -32,6 +46,18 @@ else
     echo ""
     echo "Activating newly created environment..."
     conda activate ${ENV_NAME}
+
+    # Sometimes pip packages from yaml don't install properly, install them explicitly
+    echo ""
+    echo "Ensuring pip packages are installed..."
+    pip install --upgrade pip
+    pip install vllm==0.11.0
+    pip install fastapi uvicorn[standard] pydantic tyro
+    pip install langchain langchain-community sentence-transformers
+    pip install httpx numpy datasets
+    pip install psutil pynvml
+    pip install structlog colorama
+    pip install matplotlib seaborn
 fi
 
 echo ""
