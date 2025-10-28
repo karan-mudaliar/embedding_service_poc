@@ -284,7 +284,7 @@ Based on ONNX+TensorRT optimizations:
 
 Check SLURM allocation includes GPU:
 ```bash
-srun --partition=d2r2 --gres=gpu:1 --pty bash
+srun --partition=d2r2 --gres=gpu:l40s:1 --pty bash
 nvidia-smi
 ```
 

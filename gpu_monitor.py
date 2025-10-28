@@ -44,10 +44,34 @@ class GPUMonitor:
 
         # Initialize NVML
         try:
+            import os
+            cuda_visible = os.environ.get("CUDA_VISIBLE_DEVICES", "not set")
+            logger.info("cuda_visible_devices", value=cuda_visible)
+
             pynvml.nvmlInit()
-            self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)  # GPU 0
-            device_name = pynvml.nvmlDeviceGetName(self.handle)
-            logger.info("gpu_monitor_initialized", device=device_name)
+
+            # Get number of GPUs
+            device_count = pynvml.nvmlDeviceGetCount()
+            logger.info("gpu_devices_found", count=device_count)
+
+            if device_count == 0:
+                raise RuntimeError("No GPU devices found")
+
+            # Find first available GPU (SLURM might not allocate GPU 0)
+            self.handle = None
+            for i in range(device_count):
+                try:
+                    self.handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+                    device_name = pynvml.nvmlDeviceGetName(self.handle)
+                    logger.info("gpu_monitor_initialized", gpu_index=i, device=device_name)
+                    break
+                except Exception as e:
+                    logger.warning("gpu_not_accessible", gpu_index=i, error=str(e))
+                    continue
+
+            if self.handle is None:
+                raise RuntimeError("No accessible GPU found")
+
         except Exception as e:
             logger.error("gpu_monitor_init_failed", error=str(e))
             raise

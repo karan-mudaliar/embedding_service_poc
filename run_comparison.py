@@ -117,15 +117,15 @@ class ComparisonRunner:
         cmd = [
             "python",
             "stress_test.py",
-            "--service-url",
+            "--config.service-url",
             service_url,
-            "--duration-minutes",
+            "--config.duration-minutes",
             str(self.config.duration_minutes),
-            "--batch-size",
+            "--config.batch-size",
             str(batch_size),
-            "--max-concurrent-requests",
+            "--config.max-concurrent-requests",
             str(self.config.max_concurrent_requests),
-            "--data-file",
+            "--config.data-file",
             self.config.data_file,
         ]
 
