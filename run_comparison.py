@@ -51,7 +51,7 @@ class ServiceManager:
 
         # Wait for service to be ready
         logger.info("waiting_for_service_to_start")
-        time.sleep(45)  # Give service time to load model
+        time.sleep(60)  # Give service time to load model (increased for BERT)
 
         logger.info("service_started", pid=self.process.pid)
 

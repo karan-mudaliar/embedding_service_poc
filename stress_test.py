@@ -89,18 +89,33 @@ class StressTestRunner:
         sentences = load_test_data(self.config.data_file)
         logger.info("loaded_test_data", num_sentences=len(sentences))
 
-        # Check service health
+        # Check service health with retries
+        max_retries = 5
+        retry_delay = 10  # seconds
+        health_ok = False
+
         async with httpx.AsyncClient() as client:
-            try:
-                health_response = await client.get(
-                    f"{self.config.service_url}/health", timeout=10.0
-                )
-                health_response.raise_for_status()
-                health_data = health_response.json()
-                logger.info("service_health_check", health=health_data)
-            except Exception as e:
-                logger.error("health_check_failed", error=str(e))
-                return
+            for attempt in range(max_retries):
+                try:
+                    logger.info("health_check_attempt", attempt=attempt + 1, max_retries=max_retries)
+                    health_response = await client.get(
+                        f"{self.config.service_url}/health", timeout=10.0
+                    )
+                    health_response.raise_for_status()
+                    health_data = health_response.json()
+                    logger.info("service_health_check_ok", health=health_data)
+                    health_ok = True
+                    break
+                except Exception as e:
+                    logger.warning("health_check_failed_retry", attempt=attempt + 1, error=str(e))
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay)
+                    else:
+                        logger.error("health_check_failed_all_retries", error=str(e))
+
+        if not health_ok:
+            logger.error("service_not_healthy_aborting")
+            return
 
         # Start stress test
         self.start_time = time.time()
