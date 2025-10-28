@@ -119,10 +119,10 @@ python data_loader.py
 
 ```bash
 python run_comparison.py \
-  --duration-minutes 10 \
-  --batch-sizes 16 32 64 \
-  --max-concurrent-requests 10 \
-  --num-sentences 100000
+  --config.duration-minutes 10 \
+  --config.batch-sizes 16 32 64 \
+  --config.max-concurrent-requests 10 \
+  --config.num-sentences 100000
 ```
 
 ### 4. Generate Plots
@@ -136,25 +136,25 @@ python plot_results.py --results-dir results
 ### Change Test Duration
 
 ```bash
-python run_comparison.py --duration-minutes 5
+python run_comparison.py --config.duration-minutes 5
 ```
 
 ### Test Different Batch Sizes
 
 ```bash
-python run_comparison.py --batch-sizes 8 16 32 64 128
+python run_comparison.py --config.batch-sizes 8 16 32 64 128
 ```
 
 ### Adjust Concurrency
 
 ```bash
-python run_comparison.py --max-concurrent-requests 20
+python run_comparison.py --config.max-concurrent-requests 20
 ```
 
 ### Use More Data
 
 ```bash
-python run_comparison.py --num-sentences 500000
+python run_comparison.py --config.num-sentences 500000
 ```
 
 ## API Endpoints
@@ -308,7 +308,7 @@ Services use ports 8000 and 8002. If occupied, modify service files.
 
 Reduce batch size or concurrent requests:
 ```bash
-python run_comparison.py --batch-sizes 8 16 --max-concurrent-requests 5
+python run_comparison.py --config.batch-sizes 8 16 --config.max-concurrent-requests 5
 ```
 
 ## Citation

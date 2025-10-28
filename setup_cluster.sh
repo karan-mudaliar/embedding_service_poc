@@ -41,7 +41,7 @@ pip install --upgrade pip
 pip install fastapi uvicorn[standard] pydantic tyro
 pip install langchain langchain-community sentence-transformers
 pip install httpx numpy datasets
-pip install psutil pynvml
+pip install psutil nvidia-ml-py
 pip install structlog colorama
 pip install matplotlib seaborn
 

@@ -30,10 +30,10 @@ echo ""
 
 # Run comparison with default settings
 python run_comparison.py \
-  --duration-minutes 10 \
-  --batch-sizes 16 32 64 \
-  --max-concurrent-requests 10 \
-  --num-sentences 100000
+  --config.duration-minutes 10 \
+  --config.batch-sizes 16 32 64 \
+  --config.max-concurrent-requests 10 \
+  --config.num-sentences 100000
 
 echo ""
 echo "=========================================="

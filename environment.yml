@@ -33,7 +33,7 @@ dependencies:
 
     # Monitoring
     - psutil>=5.9.0
-    - pynvml>=11.5.0
+    - nvidia-ml-py>=11.5.0
 
     # Logging
     - structlog>=23.2.0
