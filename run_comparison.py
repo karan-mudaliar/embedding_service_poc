@@ -138,15 +138,22 @@ class ComparisonRunner:
         monitor_thread.join(timeout=10)
 
         if result.returncode != 0:
-            logger.error("stress_test_failed", stderr=result.stderr)
+            logger.error("stress_test_failed", stderr=result.stderr, stdout=result.stdout)
             raise RuntimeError(f"Stress test failed: {result.stderr}")
 
-        logger.info("stress_test_completed")
+        logger.info("stress_test_completed", stdout=result.stdout[:500] if result.stdout else "no output")
 
         # Find the most recent stress test results file
         import glob
+        import os
         results_files = sorted(glob.glob("stress_test_results_*.json"))
         if not results_files:
+            # Debug: list all JSON files in current directory
+            all_json = glob.glob("*.json")
+            logger.error("no_stress_results_found",
+                        cwd=os.getcwd(),
+                        json_files=all_json,
+                        looking_for="stress_test_results_*.json")
             raise RuntimeError("No stress test results file found")
 
         latest_results = results_files[-1]
