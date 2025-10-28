@@ -24,11 +24,11 @@ def load_test_sentences(num_samples: int = 100000, cache_dir: str = "./data_cach
     """
     logger.info("loading_ms_marco_dataset", num_samples=num_samples)
 
-    # Load MS MARCO passage corpus from sentence-transformers
+    # Load MS MARCO passage corpus
     # This contains ~8.8M passages from Bing search
     dataset = load_dataset(
-        "sentence-transformers/msmarco-corpus",
-        "corpus",
+        "microsoft/ms_marco",
+        "v2.1",
         split="train",
         cache_dir=cache_dir,
         streaming=True  # Stream to avoid loading entire dataset
@@ -38,9 +38,22 @@ def load_test_sentences(num_samples: int = 100000, cache_dir: str = "./data_cach
     for i, item in enumerate(dataset):
         if i >= num_samples:
             break
-        # Extract the passage text
-        text = item["text"]
-        sentences.append(text)
+        # Extract the passage text (MS MARCO v2.1 uses "passages" field)
+        # Each item has passages which contain the text
+        if "passages" in item and "passage_text" in item["passages"]:
+            passages = item["passages"]["passage_text"]
+            # Take the first passage or concatenate if multiple
+            text = passages[0] if passages else ""
+        elif "passage" in item:
+            text = item["passage"]
+        elif "text" in item:
+            text = item["text"]
+        else:
+            # Fallback: try to find any text field
+            text = str(item)
+
+        if text:  # Only add non-empty texts
+            sentences.append(text)
 
         if (i + 1) % 10000 == 0:
             logger.info("loading_progress", passages_loaded=i + 1)

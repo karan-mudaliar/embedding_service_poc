@@ -192,7 +192,7 @@ class ComparisonRunner:
 
     def run(self):
         """Run the full comparison."""
-        logger.info("starting_comparison", config=self.config.dict())
+        logger.info("starting_comparison", config=self.config.model_dump())
 
         # Prepare dataset
         self.prepare_dataset()
